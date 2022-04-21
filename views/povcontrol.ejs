@@ -25,57 +25,164 @@
     </h1>
     <p>Log</p>
     <textarea id="textareaLog" disabled></textarea>
-    <p>
-        <label for="rangeX" class="form-label">X&nbsp;:&nbsp;<span id="rangeX_val">0</span></label>
-        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeX">
-    </p>
-    <p>
-        <label for="rangeY" class="form-label">Y&nbsp;:&nbsp;<span id="rangeY_val">0</span></label>
-        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeY">
-    </p>
-    <p>
-        <label for="rangeZ" class="form-label">Z&nbsp;:&nbsp;<span id="rangeZ_val">0</span></label>
-        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeZ">
-    </p>
-    <p>
-        <label for="rangeRotX" class="form-label">rot X&nbsp;:&nbsp;<span id="rangeRotX_val">0</span></label>
-        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeRotX">
-    </p>
-    <p>
-        <label for="rangeRotY" class="form-label">rot Y&nbsp;:&nbsp;<span id="rangeRotY_val">0</span></label>
-        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeRotY">
-    </p>
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <p>
+                    <label for="matrix1" class="form-label">matrix1&nbsp;:&nbsp;<span id="matrix1_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix1">
+                </p>
+            </div>
+            <div class="col">
+                <p>
+                    <label for="matrix2" class="form-label">matrix2&nbsp;:&nbsp;<span id="matrix2_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix2">
+                </p>
+            </div>
+            <div class="col">
+                <p>
+                    <label for="matrix3" class="form-label">matrix3&nbsp;:&nbsp;<span id="matrix3_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix3">
+                </p>
+            </div>
+            <div class="col">
+                <p>
+                    <label for="matrix4" class="form-label">matrix4&nbsp;:&nbsp;<span id="matrix4_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix4">
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <p>
+                    <label for="matrix5" class="form-label">matrix5&nbsp;:&nbsp;<span id="matrix5_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix5">
+                </p>
+            </div>
+            <div class="col">
+                <p>
+                    <label for="matrix6" class="form-label">matrix6&nbsp;:&nbsp;<span id="matrix6_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix6">
+                </p>
+            </div>
+            <div class="col">
+                <p>
+                    <label for="matrix7" class="form-label">matrix7&nbsp;:&nbsp;<span id="matrix7_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix7">
+                </p>
+            </div>
+            <div class="col">
+                <p>
+                    <label for="matrix8" class="form-label">matrix8&nbsp;:&nbsp;<span id="matrix8_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix8">
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <p>
+                    <label for="matrix9" class="form-label">matrix9&nbsp;:&nbsp;<span id="matrix9_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix9">
+                </p>
+            </div>
+            <div class="col">
+                <p>
+                    <label for="matrix10" class="form-label">matrix10&nbsp;:&nbsp;<span
+                            id="matrix10_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix10">
+                </p>
+            </div>
+            <div class="col">
+                <p>
+                    <label for="matrix11" class="form-label">matrix1&nbsp;:&nbsp;<span
+                            id="matrix11_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix11">
+                </p>
+            </div>
+            <div class="col">
+                <p>
+                    <label for="matrix12" class="form-label">matrix12&nbsp;:&nbsp;<span
+                            id="matrix12_val">0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix12">
+                </p>
+            </div>
+        </div>
+    </div>
 </body>
 <script>
     $.fn.scrollBottom = function () {
         return $(this).scrollTop($(this)[0].scrollHeight);
     };
-    $("#rangeX").on('input', function () {
-        $("#rangeX_val").html($(this).val());
+
+    let Camera;
+    protobuf.load("proto/nes.proto").
+        then((root) => { Camera = root.lookupType("nesproto.Camera") });
+
+    $("#matrix1").on('input', function () {
+        $("#matrix1_val").html($(this).val());
         send_values();
     });
-    $("#rangeY").on('input', function () {
-        $("#rangeY_val").html($(this).val());
+    $("#matrix2").on('input', function () {
+        $("#matrix2_val").html($(this).val());
         send_values();
     });
-    $("#rangeZ").on('input', function () {
-        $("#rangeZ_val").html($(this).val());
+    $("#matrix3").on('input', function () {
+        $("#matrix3_val").html($(this).val());
         send_values();
     });
-    $("#rangeRotX").on('input', function () {
-        $("#rangeRotX_val").html($(this).val());
+    $("#matrix4").on('input', function () {
+        $("#matrix4_val").html($(this).val());
         send_values();
     });
-    $("#rangeRotY").on('input', function () {
-        $("#rangeRotY_val").html($(this).val());
+    $("#matrix5").on('input', function () {
+        $("#matrix5_val").html($(this).val());
+        send_values();
+    });
+    $("#matrix6").on('input', function () {
+        $("#matrix6_val").html($(this).val());
+        send_values();
+    });
+    $("#matrix7").on('input', function () {
+        $("#matrix7_val").html($(this).val());
+        send_values();
+    });
+    $("#matrix8").on('input', function () {
+        $("#matrix8_val").html($(this).val());
+        send_values();
+    });
+    $("#matrix9").on('input', function () {
+        $("#matrix9_val").html($(this).val());
+        send_values();
+    });
+    $("#matrix10").on('input', function () {
+        $("#matrix10_val").html($(this).val());
+        send_values();
+    });
+    $("#matrix11").on('input', function () {
+        $("#matrix11_val").html($(this).val());
+        send_values();
+    });
+    $("#matrix12").on('input', function () {
+        $("#matrix12_val").html($(this).val());
         send_values();
     });
 
-    const socket = new WebSocket('wss://localhost:9091');
+    const socket = new WebSocket('wss://localhost:9090');
+    socket.binaryType = "arraybuffer";
 
     function send_values() {
-        log('send_values(): sending x=' + $("#rangeX").val() + " y=" + $("#rangeY").val() + " z=" + $("#rangeZ").val() + " rotx=" + $("#rangeRotX").val() + " roty=" + $("#rangeRotY").val());
-        socket.send($("#rangeX").val() + "|" + $("#rangeY").val() + "|" + $("#rangeZ").val() + "|" + $("#rangeRotX").val() + "|" + $("#rangeRotY").val());
+        var payload = { matrix: Array($("#matrix1").val(), $("#matrix2").val(), $("#matrix3").val(), $("#matrix4").val(), $("#matrix5").val(), $("#matrix6").val(), $("#matrix7").val(), $("#matrix8").val(), $("#matrix9").val(), $("#matrix10").val(), $("#matrix11").val(), $("#matrix12").val()) };
+        var message = Camera.create(payload);
+        var buffer = Camera.encode(message).finish();
+        var logmsg = 'send_values(): sending \n';
+        for (var i = 1; i <= 3; i += 1) {
+            for (var j = 1; j <= 4; j += 1) {
+                logmsg += Number($("#matrix" + i * j).val()).toFixed(4) + " ";
+            }
+            logmsg += '\n';
+        }
+        log(logmsg);
+        socket.send(buffer);
     }
     socket.addEventListener('open', function (event) {
         log('conn opened');
