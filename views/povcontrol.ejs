@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <link rel="stylesheet" href="/vendors/bootstrap/css/bootstrap.min.css" />
+    <script src="/vendors/jquery/jquery.min.js"></script>
+    <script src="/vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <style>
+        #textareaLog {
+            width: 1000px;
+            height: 400px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>
+        <%= title %>
+    </h1>
+    <p>Log</p>
+    <textarea id="textareaLog" disabled></textarea>
+    <p>
+        <label for="rangeX" class="form-label">X&nbsp;:&nbsp;<span id="rangeX_val">0</span></label>
+        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeX">
+    </p>
+    <p>
+        <label for="rangeY" class="form-label">Y&nbsp;:&nbsp;<span id="rangeY_val">0</span></label>
+        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeY">
+    </p>
+    <p>
+        <label for="rangeZ" class="form-label">Z&nbsp;:&nbsp;<span id="rangeZ_val">0</span></label>
+        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeZ">
+    </p>
+    <p>
+        <label for="rangeRotX" class="form-label">rot X&nbsp;:&nbsp;<span id="rangeRotX_val">0</span></label>
+        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeRotX">
+    </p>
+    <p>
+        <label for="rangeRotY" class="form-label">rot Y&nbsp;:&nbsp;<span id="rangeRotY_val">0</span></label>
+        <input type="range" class="form-range" min="-2" max="2" step="0.0001" id="rangeRotY">
+    </p>
+</body>
+<script>
+    $.fn.scrollBottom = function () {
+        return $(this).scrollTop($(this)[0].scrollHeight);
+    };
+    $("#rangeX").on('input', function () {
+        $("#rangeX_val").html($(this).val());
+        send_values();
+    });
+    $("#rangeY").on('input', function () {
+        $("#rangeY_val").html($(this).val());
+        send_values();
+    });
+    $("#rangeZ").on('input', function () {
+        $("#rangeZ_val").html($(this).val());
+        send_values();
+    });
+    $("#rangeRotX").on('input', function () {
+        $("#rangeRotX_val").html($(this).val());
+        send_values();
+    });
+    $("#rangeRotY").on('input', function () {
+        $("#rangeRotY_val").html($(this).val());
+        send_values();
+    });
+
+    const socket = new WebSocket('wss://localhost:9091');
+
+    function send_values() {
+        log('send_values(): sending x=' + $("#rangeX").val() + " y=" + $("#rangeY").val() + " z=" + $("#rangeZ").val() + " rotx=" + $("#rangeRotX").val() + " roty=" + $("#rangeRotY").val());
+        socket.send($("#rangeX").val() + "|" + $("#rangeY").val() + "|" + $("#rangeZ").val() + "|" + $("#rangeRotX").val() + "|" + $("#rangeRotY").val());
+    }
+    socket.addEventListener('open', function (event) {
+        log('conn opened');
+    });
+    function log(text) {
+        $("#textareaLog").val($("#textareaLog").val() + new Date().toLocaleTimeString('ko-KR') + " " + text + '\n').scrollBottom();
+    }
+</script>
+
+</html>
