@@ -16,7 +16,6 @@
             height: 400px;
             font-family: monospace;
         }
-
     </style>
 </head>
 
@@ -30,8 +29,9 @@
         <div class="row">
             <div class="col">
                 <p>
-                    <label for="matrix1" class="form-label">matrix1&nbsp;:&nbsp;<span id="matrix1_val">0</span></label>
-                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix1">
+                    <label for="matrix1" class="form-label">matrix1&nbsp;:&nbsp;<span
+                            id="matrix1_val">1.0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix1" value="1.0">
                 </p>
             </div>
             <div class="col">
@@ -48,8 +48,9 @@
             </div>
             <div class="col">
                 <p>
-                    <label for="matrix4" class="form-label">matrix4&nbsp;:&nbsp;<span id="matrix4_val">0</span></label>
-                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix4">
+                    <label for="matrix4" class="form-label">matrix4&nbsp;:&nbsp;<span
+                            id="matrix4_val">0.5</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix4" value="0.5">
                 </p>
             </div>
         </div>
@@ -62,8 +63,9 @@
             </div>
             <div class="col">
                 <p>
-                    <label for="matrix6" class="form-label">matrix6&nbsp;:&nbsp;<span id="matrix6_val">0</span></label>
-                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix6">
+                    <label for="matrix6" class="form-label">matrix6&nbsp;:&nbsp;<span
+                            id="matrix6_val">-1.0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix6" value="-1.0">
                 </p>
             </div>
             <div class="col">
@@ -74,8 +76,9 @@
             </div>
             <div class="col">
                 <p>
-                    <label for="matrix8" class="form-label">matrix8&nbsp;:&nbsp;<span id="matrix8_val">0</span></label>
-                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix8">
+                    <label for="matrix8" class="form-label">matrix8&nbsp;:&nbsp;<span
+                            id="matrix8_val">0.5</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix8" value="0.5">
                 </p>
             </div>
         </div>
@@ -96,15 +99,15 @@
             <div class="col">
                 <p>
                     <label for="matrix11" class="form-label">matrix1&nbsp;:&nbsp;<span
-                            id="matrix11_val">0</span></label>
-                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix11">
+                            id="matrix11_val">-1.0</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix11" value="-1.0">
                 </p>
             </div>
             <div class="col">
                 <p>
                     <label for="matrix12" class="form-label">matrix12&nbsp;:&nbsp;<span
-                            id="matrix12_val">0</span></label>
-                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix12">
+                            id="matrix12_val">0.5</span></label>
+                    <input type="range" class="form-range" min="-4" max="4" step="0.0001" id="matrix12" value="0.5">
                 </p>
             </div>
         </div>
@@ -168,7 +171,7 @@
         send_values();
     });
 
-    const socket = new WebSocket('wss://localhost:9090');
+    const socket = new WebSocket('wss://localhost:9091');
     socket.binaryType = "arraybuffer";
 
     function send_values() {
@@ -176,15 +179,18 @@
         var message = Camera.create(payload);
         var buffer = Camera.encode(message).finish();
         var logmsg = 'send_values(): sending \n';
-        for (var i = 1; i <= 3; i += 1) {
-            for (var j = 1; j <= 4; j += 1) {
-                logmsg += Number($("#matrix" + i * j).val()).toFixed(4) + " ";
+        for (var i = 1; i <= 12; i += 1) {
+            logmsg += Number($("#matrix" + i).val()).toFixed(4) + " ";
+            if (i % 4 == 0) {
+                logmsg += '\n';
             }
-            logmsg += '\n';
         }
+
+
         log(logmsg);
         socket.send(buffer);
     }
+
     socket.addEventListener('open', function (event) {
         log('conn opened');
     });
