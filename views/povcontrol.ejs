@@ -111,6 +111,24 @@
                 </p>
             </div>
         </div>
+        <div class="row" width="300">
+            <div class="col">
+                <button type="button" id="btn_w">W</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <button type="button" id="btn_a">A</button>
+                <button type="button" id="btn_s">S</button>
+                <button type="button" id="btn_d">D</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <button type="button" id="btn_z">Z</button>
+                <button type="button" id="btn_x">X</button>
+            </div>
+        </div>
     </div>
 </body>
 <script>
@@ -169,6 +187,71 @@
     $("#matrix12").on('input', function () {
         $("#matrix12_val").html($(this).val());
         send_values();
+    });
+
+    $("#rotx").on('input', function () {
+        $("#matrix12_val").html($(this).val());
+        send_values();
+    });
+
+    delta = 0.01;
+    function go(d) {
+        if (d == 'w') {
+            $("#matrix12").val(Number($("#matrix12").val()) - delta);
+            $("#matrix12_val").html($("#matrix12").val());
+            send_values();
+        } else if (d == 's') {
+            $("#matrix12").val(Number($("#matrix12").val()) + delta);
+            $("#matrix12_val").html($("#matrix12").val());
+            send_values();
+        } else if (d == 'a') {
+            $("#matrix4").val(Number($("#matrix4").val()) - delta);
+            $("#matrix4_val").html($("#matrix4").val());
+            send_values();
+        } else if (d == 'd') {
+            $("#matrix4").val(Number($("#matrix4").val()) + delta);
+            $("#matrix4_val").html($("#matrix4").val());
+            send_values();
+        } else if (d == 'z') {
+            $("#matrix8").val(Number($("#matrix8").val()) + delta);
+            $("#matrix8_val").html($("#matrix8").val());
+            send_values();
+        } else if (d == 'x') {
+            $("#matrix8").val(Number($("#matrix8").val()) - delta);
+            $("#matrix8_val").html($("#matrix8").val());
+            send_values();
+        }
+    }
+
+    $("#btn_w").mousedown(function () {
+        interval = setInterval(go, 50, 'w');
+    }).mouseup(function () {
+        clearInterval(interval);
+    });
+    $("#btn_a").mousedown(function () {
+        interval = setInterval(go, 50, 'a');
+    }).mouseup(function () {
+        clearInterval(interval);
+    });
+    $("#btn_s").mousedown(function () {
+        interval = setInterval(go, 50, 's');
+    }).mouseup(function () {
+        clearInterval(interval);
+    });
+    $("#btn_d").mousedown(function () {
+        interval = setInterval(go, 50, 'd');
+    }).mouseup(function () {
+        clearInterval(interval);
+    });
+    $("#btn_z").mousedown(function () {
+        interval = setInterval(go, 50, 'z');
+    }).mouseup(function () {
+        clearInterval(interval);
+    });
+    $("#btn_x").mousedown(function () {
+        interval = setInterval(go, 50, 'x');
+    }).mouseup(function () {
+        clearInterval(interval);
     });
 
     const socket = new WebSocket('wss://localhost:9091');
