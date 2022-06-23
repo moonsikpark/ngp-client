@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        body {
+            margin: 0;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+    <script src="/vendors/protobufjs/protobuf.min.js"></script>
+</head>
+
+<body>
+    <script type="module">
+        var canvas = document.createElement('canvas')
+
+        var ctx = canvas.getContext('2d');
+        document.body.appendChild(ctx.canvas);
+        ctx.canvas.width = 1920;
+        ctx.canvas.height = 1080;
+
+        var canvas_depth = document.createElement('canvas')
+
+        var ctx_depth = canvas_depth.getContext('2d');
+        document.body.appendChild(ctx_depth.canvas);
+        ctx_depth.canvas.width = 1920;
+        ctx_depth.canvas.height = 1080;
+
+        function increaseResolution() {
+            ctx.canvas.width += 50;
+            ctx.canvas.height += 50;
+            ctx_depth.canvas.width += 50;
+            ctx_depth.canvas.height += 50;
+            canvas.width = ctx.canvas.width;
+            canvas.height = ctx.canvas.height;
+            canvas.width = ctx_depth.canvas.width;
+            canvas.height = ctx_depth.canvas.height;
+            console.log("increaseResolution: ", ctx.canvas.width, ctx.canvas.height);
+            let config = {
+                codec: "avc1.42001E", // 'avc1.42001E',
+                displayWidth: ctx.canvas.width,
+                displayHeight: ctx.canvas.height,
+                avc: { format: "annexb" }
+            };
+            decoder.configure(config);
+        }
+
+        //setInterval(increaseResolution, 3000);
+
+        function paintFrame(frame) {
+            ctx.drawImage(frame, 0, 0, ctx.canvas.width, ctx.canvas.height);
+            frame.close();
+        }
+        function paintFrame_depth(frame) {
+            ctx_depth.drawImage(frame, 0, 0, ctx_depth.canvas.width, ctx_depth.canvas.height);
+            frame.close();
+        }
+
+        let decoder = new VideoDecoder({
+            output: paintFrame,
+            error: e => console.error(e),
+        });
+
+        let config = {
+            codec: "avc1.42001E", // 'avc1.42001E',
+            displayWidth: 1920,
+            displayHeight: 1080,
+            avc: { format: "annexb" }
+        };
+
+        console.assert(VideoDecoder.isConfigSupported(config));
+        decoder.configure(config);
+
+        let socket = new WebSocket("ws://localhost:10001");
+
+        socket.onopen = function (e) {
+            console.log("[open] Connection established");
+        };
+
+        socket.onmessage = function (event) {
+            event.data.arrayBuffer()
+                .then(data => {
+                    let dv = new DataView(data);
+                    let type = dv.getInt8(0) == 1 ? "delta" : "key";
+                    dv.setUint8(0, 0);
+                    var init = {
+                        type: type,
+                        timestamp: 0,
+                        data: data,
+                    };
+                    let chunk = new EncodedVideoChunk(init);
+                    console.log(chunk);
+                    decoder.decode(chunk);
+                })
+        };
+
+        socket.onerror = function (error) {
+            console.log(`[error] ${error.message}`);
+        };
+
+
+        let decoder_depth = new VideoDecoder({
+            output: paintFrame_depth,
+            error: e => console.error(e),
+        });
+
+        let config_depth = {
+            codec: "avc1.42001E", // 'avc1.42001E',
+            displayWidth: 1920,
+            displayHeight: 1080,
+            avc: { format: "annexb" }
+        };
+
+        console.assert(VideoDecoder.isConfigSupported(config_depth));
+        decoder_depth.configure(config_depth);
+
+        let socket_depth = new WebSocket("ws://localhost:10002");
+
+        socket_depth.onopen = function (e) {
+            console.log("[open] Connection established");
+        };
+
+        socket_depth.onmessage = function (event) {
+            event.data.arrayBuffer()
+                .then(data => {
+                    let dv = new DataView(data);
+                    let type = dv.getInt8(0) == 1 ? "delta" : "key";
+                    dv.setUint8(0, 0);
+                    var init = {
+                        type: type,
+                        timestamp: 0,
+                        data: data,
+                    };
+                    let chunk = new EncodedVideoChunk(init);
+                    console.log(chunk);
+                    decoder_depth.decode(chunk);
+                })
+        };
+
+        socket.onerror = function (error) {
+            console.log(`[error] ${error.message}`);
+        };
+
+
+        // Import three
+        import * as THREE from 'https://unpkg.com/three/build/three.module.js';
+        // Import the default VRButton
+        import { VRButton } from 'https://unpkg.com/three/examples/jsm/webxr/VRButton.js';
+
+        const texture = new THREE.CanvasTexture(ctx.canvas);
+        // Make a new scene
+        let scene = new THREE.Scene();
+        // Set background color of the scene to gray
+        // scene.background = new THREE.Color(0x000000);
+        scene.background = texture;
+
+        // Make a camera. note that far is set to 100, which is better for realworld sized environments
+        let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0.5, 0.5, 0.5);
+        scene.add(camera);
+
+        // Add some lights
+        var light = new THREE.DirectionalLight(0xffffff, 0.5);
+        light.position.set(1, 1, 1).normalize();
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5))
+
+        // Make a red cube
+        let cube = new THREE.Mesh(
+            new THREE.BoxBufferGeometry(1, 1, 1),
+            new THREE.MeshLambertMaterial({ color: 'red' })
+        );
+        cube.position.set(0, 1.5, -10);
+        scene.add(cube);
+
+        // Make a renderer that fills the screen
+        let renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        // Turn on VR support
+        renderer.xr.enabled = true;
+        // Set animation loop
+        renderer.setAnimationLoop(render);
+        // Add canvas to the page
+        document.body.appendChild(renderer.domElement);
+
+        // Add a button to enter/exit vr to the page
+        document.body.appendChild(VRButton.createButton(renderer));
+
+        // Handle browser resize
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function render(time) {
+            // Rotate the cube
+            cube.rotation.y = time / 1000;
+            // Draw everything
+            renderer.render(scene, camera);
+        }
+
+        let Camera;
+        protobuf.load("proto/nes.proto").
+            then((root) => { Camera = root.lookupType("nesproto.Camera") });
+
+        const camera_socket = new WebSocket('ws://localhost:9998');
+        camera_socket.binaryType = "arraybuffer";
+
+        function send_values() {
+            var c = camera.matrixWorld.toArray();
+            var a = Array(c[0], c[4], c[8], c[11], c[1], -c[5], c[9], c[12], c[2], c[6], -c[10], c[13]);
+            var payload = { matrix: a, width: ctx.canvas.width, height: ctx.canvas.height };
+            console.log(payload);
+            var message = Camera.create(payload);
+            var buffer = Camera.encode(message).finish();
+            var logmsg = 'send_values(): sending';
+            camera_socket.send(buffer);
+            log(logmsg);
+        }
+
+        //window.setInterval(send_values, 30);
+
+        camera_socket.addEventListener('open', function (event) {
+            log('conn opened');
+        });
+        function log(text) {
+            console.log(text);
+        }
+    </script>
+</body>
+
+</html>
