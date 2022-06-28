@@ -15,7 +15,7 @@ class VideoDecoderManager {
             output: this.paintFrame.bind(this),
             error: e => console.error(e),
         });
-        this.setResolution(1280, 960);
+        this.setResolution(1280, 1296);
         this.videoSource = new WebSocket(videoSource);
         this.videoSource.error = e => console.log(e);
         this.videoSource.onmessage = this.onVideoSourceMessage.bind(this);

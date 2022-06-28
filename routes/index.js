@@ -36,5 +36,9 @@ router.get('/mediastream', function (req, res, next) {
   res.render('mediastream', { title: 'resolution test' });
 });
 
+router.get('/twoeye', function (req, res, next) {
+  res.render('twoeye', { title: 'resolution test' });
+});
+
 
 module.exports = router;
