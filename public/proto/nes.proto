@@ -3,12 +3,23 @@ syntax = "proto3";
 package nesproto;
 
 message Camera {
+    bool is_left = 2;
+    uint32 width = 3;
+    uint32 height = 4;
     repeated float matrix = 12;
 }
 
 message FrameRequest {
     uint64 index = 1;
     Camera camera = 2;
-    uint32 width = 3;
-    uint32 height = 4;
+    bool is_left = 3;
+}
+
+message RenderedFrame {
+    uint64 index = 1;
+    Camera camera = 2;
+    bool is_left = 3;
+    
+    bytes frame = 6;
+    bytes depth = 7;
 }

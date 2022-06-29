@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        WebCodec test
+    </title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <link rel="stylesheet" href="/vendors/bootstrap/css/bootstrap.min.css" />
+    <script src="/vendors/jquery/jquery.min.js"></script>
+    <script src="/vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <style>
+    </style>
+</head>
+
+<body>
+    <h1>
+        WebCodec test
+    </h1>
+    <canvas style="outline: 1px solid" width="1280" height="720"></canvas>
+</body>
+<script>
+    var canvas = document.querySelector("canvas");                                // we'll use this to paint. VideoFrame is a CanvasImageSource
+    canvas.width = 1280;
+    canvas.height = 720;
+    var ctx = canvas.getContext('2d');
+
+    function paintFrame(frame) {
+        ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+        frame.close();
+    }
+
+    let decoder = new VideoDecoder({
+        output: paintFrame,
+        error: e => console.error(e),
+    });
+
+    let config = {
+        codec: "avc1.42001E", // 'avc1.42001E',
+        displayWidth: 1280,
+        displayHeight: 720,
+        avc: { format: "annexb" }
+    };
+
+    console.assert(VideoDecoder.isConfigSupported(config));
+    decoder.configure(config);
+
+    let socket = new WebSocket("ws://localhost:9999");
+
+    socket.onopen = function (e) {
+        console.log("[open] Connection established");
+    };
+
+    socket.onmessage = function (event) {
+        event.data.arrayBuffer()
+            .then(data => {
+                var init = {
+                    type: new DataView(data).getInt8(0) == 1 ? "key" : "delta",
+                    timestamp: 0,
+                    data: data,
+                };
+                let chunk = new EncodedVideoChunk(init);
+                decoder.decode(chunk);
+            })
+    };
+
+    socket.onerror = function (error) {
+        console.log(`[error] ${error.message}`);
+    };
+</script>
+
+</html>

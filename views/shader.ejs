@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        body {
+            margin: 0;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+    <script src="/vendors/protobufjs/protobuf.min.js"></script>
+</head>
+<script id="vertexShader" type="x-shader/x-vertex">
+    varying vec2 vUv;
+    attribute vec2 a_texCoord;
+    attribute vec2 a_position;
+    varying vec2 v_texCoord;
+    varying vec2 v_position;
+    
+    void main() {
+        vUv = uv;
+        v_texCoord = a_texCoord;
+        v_position = a_position;
+
+        gl_Position = projectionMatrix * modelViewMatrix  * vec4(position, 1.0);
+    }
+  </script>
+<script id="fragmentShader" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform sampler2D depthTexture;
+    uniform sampler2D sceneTexture;
+    
+    varying vec2 v_texCoord;
+    
+    varying vec2 v_position;
+    
+    uniform float near;
+    uniform float far;
+    uniform vec2 resolution;
+    
+    varying vec2 vUv; 
+    
+    void main() {
+        vec2 pos = vec2(gl_FragCoord.x / resolution.x, gl_FragCoord.y / resolution.y);
+
+        gl_FragColor = texture2D(depthTexture, pos);
+
+        
+        //float z = gl_FragCoord.z;  // depth value [0,1]
+        //float ndcZ = 2.0*z - 1.0;  // [-1,1]
+        //float linearDepth = (2.0 * near * far) / (far + near - ndcZ * (far - near));
+
+        /*
+        if (0.8 > texture2D(depthTexture, v_texCoord)[0]) {
+        } else {
+            gl_FragColor = vec4(0.0, 0.5, 1.0, 1.0);
+        }
+        */
+    }
+   </script>
+
+<body>
+    <script type="module">
+        // Import three
+        import * as THREE from 'https://unpkg.com/three/build/three.module.js';
+        // Import the default VRButton
+        import { VRButton } from 'https://unpkg.com/three/examples/jsm/webxr/VRButton.js';
+
+        let scene = new THREE.Scene();
+
+        // Make a camera. note that far is set to 100, which is better for realworld sized environments
+        let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0.5, 0.5, 0.5);
+        scene.add(camera);
+
+        // Add some lights
+        var light = new THREE.DirectionalLight(0xffffff, 0.5);
+        light.position.set(1, 1, 1).normalize();
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5))
+
+        const depthTexture = new THREE.TextureLoader().load('images/depth.png');
+        const sceneTexture = new THREE.TextureLoader().load('images/scene.png');
+
+        scene.background = depthTexture;
+
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                near: { value: camera.near },
+                far: { value: camera.far },
+                depthTexture: { value: depthTexture },
+                sceneTexture: { value: sceneTexture },
+                resolution: { value: [window.innerWidth, window.innerHeight] }
+            },
+            vertexShader: document.getElementById('vertexShader').textContent,
+            fragmentShader: document.getElementById('fragmentShader').textContent
+        });
+
+        // Make a red cube
+        let cube = new THREE.Mesh(
+            new THREE.BoxBufferGeometry(2, 2, 2),
+            // new THREE.MeshLambertMaterial({ color: 'red' })
+            material
+        );
+        cube.position.set(0, 1.5, -10);
+        scene.add(cube);
+
+        // Make a renderer that fills the screen
+        let renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, depth: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        // Turn on VR support
+        renderer.xr.enabled = true;
+        // Set animation loop
+        renderer.setAnimationLoop(render);
+        // Add canvas to the page
+        document.body.appendChild(renderer.domElement);
+
+        // Add a button to enter/exit vr to the page
+        document.body.appendChild(VRButton.createButton(renderer));
+
+        // Handle browser resize
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function render(time) {
+            // Rotate the cube
+            cube.rotation.y = time / 1000;
+            // Draw everything
+
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+
+</html>

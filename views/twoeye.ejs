@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        body {
+            margin: 0;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+    <script src="/vendors/protobufjs/protobuf.min.js"></script>
+    <script src="/javascripts/camera.js"></script>
+    <script src="/javascripts/decoder.js"></script>
+</head>
+
+<body>
+    <script type="module">
+        let Camera;
+        protobuf.load("proto/nes.proto").
+            then((root) => { Camera = root.lookupType("nesproto.Camera") });
+        // Import three
+        import * as THREE from '/javascripts/three.module.js';
+        // Import the default VRButton
+        import { VRButton } from 'https://unpkg.com/three/examples/jsm/webxr/VRButton.js';
+
+        class CameraManager {
+            constructor(location, camera_left, camera_right, videoDecoderManager, interval = 25) {
+                this.socket = new WebSocket(location);
+                this.socket.binaryType = "arraybuffer";
+                this.socket.addEventListener("error", this.stop);
+                this.socket.addEventListener("close", this.stop);
+                this.camera_left = camera_left;
+                this.camera_right = camera_right;
+                this.videoDecoderManager = videoDecoderManager;
+                this.flipYZMatrix = new THREE.Matrix4().makeScale(1, -1, -1);
+                this.intervalLeft = window.setInterval(this.sendCameraLeft.bind(this), interval);
+                this.intervalRight = window.setInterval(this.sendCameraRight.bind(this), interval);
+            }
+
+            sendCameraLeft() {
+                if (this.socket.readyState === 1) {
+                    // var c = this.camera_left.matrixWorld.multiply(this.flipYZMatrix).toArray();
+                    var c = this.camera_left.matrix.multiply(this.flipYZMatrix).toArray();
+                    var matrix = Array(c[0], c[4], c[8], c[12], c[1], c[5], c[9], c[13], c[2], c[6], c[10], c[14]);
+                    var message = Camera.create({ isLeft: true, matrix: matrix, width: this.videoDecoderManager.width, height: this.videoDecoderManager.height });
+                    var buffer = Camera.encode(message).finish();
+                    this.socket.send(buffer);
+                }
+            }
+            sendCameraRight() {
+                if (this.socket.readyState === 1) {
+                    // var c = this.camera_right.matrixWorld.multiply(this.flipYZMatrix).toArray();
+                    var c = this.camera_right.matrix.multiply(this.flipYZMatrix).toArray();
+                    var matrix = Array(c[0], c[4], c[8], c[12], c[1], c[5], c[9], c[13], c[2], c[6], c[10], c[14]);
+                    var message = Camera.create({ isLeft: false, matrix: matrix, width: this.videoDecoderManager.width, height: this.videoDecoderManager.height });
+                    var buffer = Camera.encode(message).finish();
+                    this.socket.send(buffer);
+                }
+            }
+
+            stop(interval) {
+                window.clearInterval(this.intervalLeft);
+                window.clearInterval(this.intervalRight);
+            }
+
+        }
+
+        const canvasEl_left = document.createElement("canvas");
+        document.body.appendChild(canvasEl_left);
+        const canvasCtx_left = canvasEl_left.getContext("2d");
+
+        const texture_left = new THREE.CanvasTexture(canvasEl_left);
+
+        const canvasEl_right = document.createElement("canvas");
+        document.body.appendChild(canvasEl_right);
+        const canvasCtx_right = canvasEl_right.getContext("2d");
+
+        const texture_right = new THREE.CanvasTexture(canvasEl_right);
+
+        const canvasEl_leftDepth = document.createElement("canvas");
+        document.body.appendChild(canvasEl_leftDepth);
+        const canvasCtx_leftDepth = canvasEl_leftDepth.getContext("2d");
+
+        const texture_leftDepth = new THREE.CanvasTexture(canvasEl_leftDepth);
+
+        const canvasEl_rightDepth = document.createElement("canvas");
+        document.body.appendChild(canvasEl_rightDepth);
+        const canvasCtx_rightDepth = canvasEl_rightDepth.getContext("2d");
+
+        const texture_rightDepth = new THREE.CanvasTexture(canvasEl_rightDepth);
+
+        let scene = new THREE.Scene();
+
+
+        // Make a camera. note that far is set to 100, which is better for realworld sized environments
+        let camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 50);
+        camera.position.set(0.5, 0.5, 0.5);
+        scene.add(camera);
+
+        let testMesh = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial({ map: texture_left }));
+        camera.add(testMesh);
+
+        testMesh.position.set(0, 0, -(camera.near + 1.001));
+
+
+
+
+
+
+
+        let frameCount = 0;
+
+        testMesh.onBeforeRender = () => {
+            if (frameCount & 1) {
+                testMesh.material.map = texture_left;
+            } else {
+                testMesh.material.map = texture_right;
+            }
+            frameCount++;
+        }
+
+        // Make a renderer that fills the screen
+        let renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        // Turn on VR support
+        renderer.xr.enabled = true;
+        // Set animation loop
+        renderer.setAnimationLoop((time) => {
+            // Rotate the cube 
+            //cube.rotation.y = time / 1000;
+            // Draw everything
+            renderer.render(scene, camera);
+        });
+        // Add canvas to the page
+        document.body.appendChild(renderer.domElement);
+
+        // Add a button to enter/exit vr to the page!
+        document.body.appendChild(VRButton.createButton(renderer));
+
+        // Handle browser resize
+        // renderer.xr.addEventListener('sessionstart', onWindowResize);
+        let videoDecoderManager = new VideoDecoderManager("ws://localhost:9999", canvasCtx_left, texture_left);
+        let videoDecoderManager3 = new VideoDecoderManager("ws://localhost:10000", canvasCtx_leftDepth, texture_leftDepth);
+        let videoDecoderManager2 = new VideoDecoderManager("ws://localhost:10001", canvasCtx_right, texture_right);
+        let videoDecoderManager4 = new VideoDecoderManager("ws://localhost:10002", canvasCtx_rightDepth, texture_rightDepth);
+
+        var cameras, cameraManager;
+        const interval = setInterval(() => {
+            cameras = renderer.xr.getCamera().cameras;
+            if (cameras.length == 2) {
+                cameraManager = new CameraManager("ws://localhost:9998", cameras[0], cameras[1], videoDecoderManager);
+                clearInterval(interval);
+            }
+        }, 500);
+
+        function onWindowResize() {
+            let width = window.innerWidth / 2;
+            if (width % 2 != 0) {
+                width--;
+            }
+            let height = window.innerHeight;
+            if (height % 2 != 0) {
+                height--;
+            }
+            videoDecoderManager.setResolution(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+    </script>
+</body>
+
+</html>

@@ -16,6 +16,7 @@
             height: 400px;
             font-family: monospace;
         }
+
     </style>
 </head>
 
@@ -254,7 +255,7 @@
         clearInterval(interval);
     });
 
-    const socket = new WebSocket('wss://localhost:9091');
+    const socket = new WebSocket('ws://localhost:9998');
     socket.binaryType = "arraybuffer";
 
     function send_values() {
@@ -268,8 +269,6 @@
                 logmsg += '\n';
             }
         }
-
-
         log(logmsg);
         socket.send(buffer);
     }
