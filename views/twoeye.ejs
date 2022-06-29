@@ -103,6 +103,7 @@
         camera.position.set(0.5, 0.5, 0.5);
         scene.add(camera);
 
+        /*
         let testMesh = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial({ map: texture_left }));
         camera.add(testMesh);
 
@@ -114,8 +115,6 @@
 
 
 
-        let frameCount = 0;
-
         testMesh.onBeforeRender = () => {
             if (frameCount & 1) {
                 testMesh.material.map = texture_left;
@@ -124,6 +123,8 @@
             }
             frameCount++;
         }
+            */
+
 
         // Make a renderer that fills the screen
         let renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -132,10 +133,20 @@
         // Turn on VR support
         renderer.xr.enabled = true;
         // Set animation loop
+        let frameCount = 0;
         renderer.setAnimationLoop((time) => {
             // Rotate the cube 
             //cube.rotation.y = time / 1000;
             // Draw everything
+            if (renderer.xr.isPresenting) {
+                if (frameCount & 1) {
+                    scene.background = texture_left;
+                } else {
+                    scene.background = texture_right;
+                }
+                frameCount++;
+            }
+
             renderer.render(scene, camera);
         });
         // Add canvas to the page
